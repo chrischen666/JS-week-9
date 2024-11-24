@@ -48,8 +48,8 @@ function renderProduct(product) {
                 <img src='${product.images}'>
                 <a href="#" class="addCardBtn" data-id='${product.id}'>加入購物車</a>
                 <h3>${product.title}</h3>
-                <del class="originPrice">NT$${product.origin_price}</del>
-                <p class="nowPrice">NT$${product.price}</p>
+                <del class="originPrice">NT$${formatNumberWithCommas(product.origin_price)}</del>
+                <p class="nowPrice">NT$${formatNumberWithCommas(product.price)}</p>
             </li>`
 }
 
@@ -83,9 +83,9 @@ function renderCart() {
             <p>${cart.product.title}</p>
         </div>
     </td>
-    <td>NT$${cart.product.price}</td>
+    <td>NT$${formatNumberWithCommas(cart.product.price)}</td>
     <td>${cart.quantity}</td>
-    <td>NT$${cartTotalPrice}</td>
+    <td>NT$${formatNumberWithCommas(cartTotalPrice)}</td>
     <td class="discardBtn">
         <a href="#" class="material-icons" data-id='${cart.id}'>
             clear
@@ -94,7 +94,7 @@ function renderCart() {
     </tr>`
     })
     shoppingCartTbody.innerHTML = str;
-    cartTotal.textContent = totalPrice;
+    cartTotal.textContent = formatNumberWithCommas(totalPrice);
 }
 // const shoppingCartTable = document.querySelector('.shoppingCart-table');
 
@@ -198,4 +198,69 @@ function cleanInput() {
     customerEmail.value = '';
     customerAddress.value = '';
     tradeWay.value = 'ATM';
+}
+
+
+//表單驗證
+const constraints = {
+    "姓名": {
+        presence: {
+            message: "必填欄位"
+        }
+    },
+    "電話": {
+        presence: {
+            message: "必填欄位"
+        },
+        length: {
+            minimum: 8,
+            message: "需超過 8 碼"
+        }
+    },
+    "信箱": {
+        presence: {
+            message: "必填欄位"
+        },
+        email: {
+            message: "格式錯誤"
+        }
+    },
+    "寄送地址": {
+        presence: {
+            message: "必填欄位"
+        }
+    },
+    "交易方式": {
+        presence: {
+            message: "必填欄位"
+        }
+    },
+};
+
+const form = document.querySelector('.orderInfo-form');
+const inputs = document.querySelectorAll('input[name],select[data-payment]');
+
+inputs.forEach(item => {
+    item.addEventListener('change', () => {
+        item.nextElementSibling.textContent = '';
+        let errors = validate(form, constraints) || '';
+        let errorsArray = Object.entries(errors);
+        if (errors) {
+            errorsArray.forEach((key, index) => {
+                const error = document.querySelector(`p[data-message='${key[0]}']`);
+                error.textContent = errors[key[0]];
+            })
+        }
+    })
+})
+
+//千分位
+function formatNumberWithCommas(num) {
+    if (typeof num !== 'number' && typeof num !== 'string') {
+        throw new TypeError('Input must be a number or a string.');
+    }
+
+    const [integerPart, decimalPart] = num.toString().split('.'); // 分割整數與小數部分
+    const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ','); // 為整數部分加上千分位
+    return decimalPart !== undefined ? `${formattedInteger}.${decimalPart}` : formattedInteger;
 }
